@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Interactive Disk Scheduling Simulator for Operating Systems. Visualize, simulate, and compare FCFS, SSTF, SCAN, C-SCAN, LOOK, and C-LOOK algorithms.">
+    <title>Disk Scheduling Simulator | OS Interactive Visualizer</title>
+    <!-- Modern Typography: Inter & Outfit & Fira Code -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@500;600;700&family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Chart.js for algorithm comparison -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Top Navigation Header -->
+    <header class="site-header">
+        <div class="header-inner container">
+            <div class="brand">
+                <div class="brand-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M12 2a10 10 0 0 1 10 10"></path>
+                    </svg>
+                </div>
+                <div class="brand-text">
+                    <h1>Disk Scheduling Simulator</h1>
+                    <p class="brand-subtitle">Operating Systems • Storage Subsystems Visualizer</p>
+                </div>
+            </div>
+
+            <nav class="nav-links">
+                <a href="#simulator" class="nav-link active">Simulator</a>
+                <a href="#comparison" class="nav-link">Compare All</a>
+                <a href="#learn" class="nav-link">Algorithm Theory</a>
+                <a href="#about" class="nav-link">HDD Architecture</a>
+            </nav>
+
+            <div class="header-actions">
+                <button id="themeToggleBtn" class="action-toggle-btn" title="Toggle Dark/Light Mode" aria-label="Toggle Theme">
+                    <svg id="sunIcon" class="theme-icon hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    <svg id="moonIcon" class="theme-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <span id="themeToggleText">Theme</span>
+                </button>
+                <button id="soundToggleBtn" class="action-toggle-btn active" title="Toggle Sound Feedback" aria-label="Toggle Sound">
+                    <svg id="volumeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                    </svg>
+                    <span id="soundToggleText">Audio</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="main-content">
+
+        <!-- Page Introduction Header -->
+        <section class="page-intro container">
+            <div class="intro-content">
+                <span class="category-tag">Operating Systems Laboratory</span>
+                <h2 class="page-title">Interactive Disk Head Scheduling Simulator</h2>
+                <p class="page-description">
+                    Simulate how operating systems schedule secondary storage disk I/O requests. Observe mechanical disk-head movements, analyze boundary turnarounds, and compare seek performance across <strong>FCFS, SSTF, SCAN, C-SCAN, LOOK,</strong> and <strong>C-LOOK</strong>.
+                </p>
+            </div>
+        </section>
+
+        <!-- Simulator Section -->
+        <section id="simulator" class="simulator-section container">
+
+            <!-- Control Center Card -->
+            <div class="app-card control-card">
+                <div class="card-header">
+                    <div class="header-title-group">
+                        <h3 class="card-title">1. Simulation Parameters</h3>
+                        <p class="card-subtitle">Configure disk track cylinder requests, starting arm position, and boundary size.</p>
+                    </div>
+
+                    <!-- Presets Group -->
+                    <div class="presets-group">
+                        <span class="presets-label">Quick Presets:</span>
+                        <div class="preset-buttons">
+                            <button type="button" class="preset-btn" data-preset="classic">Classic (53)</button>
+                            <button type="button" class="preset-btn" data-preset="rightHeavy">Right-Heavy</button>
+                            <button type="button" class="preset-btn" data-preset="leftHeavy">Left-Heavy</button>
+                            <button type="button" class="preset-btn" data-preset="duplicates">Duplicates & Extremes</button>
+                        </div>
+                    </div>
+                </div>
+
+                <form id="simulatorForm" class="config-form" onsubmit="event.preventDefault();">
+                    <div class="form-columns">
+                        <!-- Request Queue Input -->
+                        <div class="field-item field-queue">
+                            <div class="field-label-row">
+                                <label for="requestQueueInput" class="field-label">Request Queue (Track Cylinders)</label>
+                                <span class="field-help">Integers separated by comma or space</span>
+                            </div>
+                            <div class="input-action-row">
+                                <input type="text" id="requestQueueInput" class="form-input mono-font" 
+                                    value="98, 183, 37, 122, 14, 124, 65, 67" 
+                                    placeholder="e.g. 98, 183, 37, 122, 14, 124, 65, 67" 
+                                    autocomplete="off" spellcheck="false" required>
+                                <button type="button" id="randomQueueBtn" class="btn btn-secondary" title="Generate Random Queue">
+                                    🎲 Randomize
+                                </button>
+                            </div>
+                            <div id="queueValidationMsg" class="validation-alert hidden"></div>
+                        </div>
+
+                        <!-- Initial Head -->
+                        <div class="field-item">
+                            <div class="field-label-row">
+                                <label for="initialHeadInput" class="field-label">Initial Head Position</label>
+                                <span class="field-help">Current cylinder track</span>
+                            </div>
+                            <input type="number" id="initialHeadInput" class="form-input mono-font" value="53" min="0" max="199" required>
+                            <div id="headValidationMsg" class="validation-alert hidden"></div>
+                        </div>
+
+                        <!-- Disk Size -->
+                        <div class="field-item">
+                            <div class="field-label-row">
+                                <label for="diskSizeInput" class="field-label">Disk Capacity (Tracks)</label>
+                                <span class="field-help">Range: 0 to Size - 1</span>
+                            </div>
+                            <input type="number" id="diskSizeInput" class="form-input mono-font" value="200" min="10" max="5000" required>
+                            <div id="diskValidationMsg" class="validation-alert hidden"></div>
+                        </div>
+
+                        <!-- Direction Selector -->
+                        <div class="field-item" id="directionGroup">
+                            <div class="field-label-row">
+                                <span class="field-label">Head Sweep Direction</span>
+                                <span class="field-help" id="directionHint">For SCAN / LOOK variants</span>
+                            </div>
+                            <div class="segmented-control">
+                                <label class="segment-btn">
+                                    <input type="radio" name="direction" value="LEFT" id="dirLeft">
+                                    <span class="segment-text">← Left (Towards 0)</span>
+                                </label>
+                                <label class="segment-btn">
+                                    <input type="radio" name="direction" value="RIGHT" id="dirRight" checked>
+                                    <span class="segment-text">Right (Towards Max) →</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Algorithm Selection -->
+                    <div class="algo-selection-section">
+                        <div class="field-label-row">
+                            <span class="field-label">Select Algorithm to Simulate</span>
+                            <span class="field-help">Click to switch algorithm</span>
+                        </div>
+                        <div class="algo-cards-grid" id="algorithmCardsContainer">
+                            <button type="button" class="algo-selector-card" data-algo="FCFS">
+                                <div class="algo-card-header">
+                                    <span class="algo-name">FCFS</span>
+                                    <span class="algo-tag">FIFO</span>
+                                </div>
+                                <div class="algo-subtitle">First-Come First-Serve</div>
+                                <div class="algo-mini-desc">Processes in strict arrival order</div>
+                            </button>
+
+                            <button type="button" class="algo-selector-card active" data-algo="SSTF">
+                                <div class="algo-card-header">
+                                    <span class="algo-name">SSTF</span>
+                                    <span class="algo-tag tag-primary">Greedy</span>
+                                </div>
+                                <div class="algo-subtitle">Shortest Seek Time First</div>
+                                <div class="algo-mini-desc">Processes nearest track to current head</div>
+                            </button>
+
+                            <button type="button" class="algo-selector-card" data-algo="SCAN">
+                                <div class="algo-card-header">
+                                    <span class="algo-name">SCAN</span>
+                                    <span class="algo-tag">Elevator</span>
+                                </div>
+                                <div class="algo-subtitle">Elevator Sweep</div>
+                                <div class="algo-mini-desc">Sweeps to boundary before reversal</div>
+                            </button>
+
+                            <button type="button" class="algo-selector-card" data-algo="C-SCAN">
+                                <div class="algo-card-header">
+                                    <span class="algo-name">C-SCAN</span>
+                                    <span class="algo-tag">Circular</span>
+                                </div>
+                                <div class="algo-subtitle">Circular SCAN</div>
+                                <div class="algo-mini-desc">Sweeps to boundary & circular return</div>
+                            </button>
+
+                            <button type="button" class="algo-selector-card" data-algo="LOOK">
+                                <div class="algo-card-header">
+                                    <span class="algo-name">LOOK</span>
+                                    <span class="algo-tag">Adaptive</span>
+                                </div>
+                                <div class="algo-subtitle">Look Ahead</div>
+                                <div class="algo-mini-desc">Reverses at furthest pending request</div>
+                            </button>
+
+                            <button type="button" class="algo-selector-card" data-algo="C-LOOK">
+                                <div class="algo-card-header">
+                                    <span class="algo-name">C-LOOK</span>
+                                    <span class="algo-tag">Circular</span>
+                                </div>
+                                <div class="algo-subtitle">Circular Look</div>
+                                <div class="algo-mini-desc">Sweeps and returns to opposite extreme</div>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Action Bar -->
+                    <div class="control-actions-bar">
+                        <div class="primary-actions">
+                            <button type="button" id="runSimulationBtn" class="btn btn-primary btn-lg">
+                                <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                                </svg>
+                                Run Simulation
+                            </button>
+                            <button type="button" id="compareAllBtn" class="btn btn-accent btn-lg">
+                                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2">
+                                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                                </svg>
+                                Compare All 6 Algorithms
+                            </button>
+                            <button type="button" id="resetBtn" class="btn btn-outline" title="Reset Inputs to Default">
+                                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M3 2v6h6"></path>
+                                    <path d="M21 12A9 9 0 0 0 6 5.3L3 8"></path>
+                                    <path d="M21 22v-6h-6"></path>
+                                    <path d="M3 12a9 9 0 0 0 15 6.7l3-2.7"></path>
+                                </svg>
+                                Reset
+                            </button>
+                        </div>
+
+                        <!-- Educational Mode Toggle -->
+                        <div class="toggle-control-item">
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="eduModeToggle" checked>
+                                <span class="toggle-track"></span>
+                                <span class="toggle-text">🎓 Educational Reasoning Mode</span>
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Active Queue Chips Bar -->
+            <div class="app-card queue-status-card">
+                <div class="queue-status-header">
+                    <div class="queue-status-title">
+                        <span class="status-icon">📋</span>
+                        <strong>Pending I/O Queue</strong>
+                        <span id="queueCountBadge" class="pill-badge">8 Requests</span>
+                    </div>
+                    <div class="queue-legend">
+                        <span class="legend-chip"><span class="chip-color chip-pending"></span> Pending</span>
+                        <span class="legend-chip"><span class="chip-color chip-target"></span> Current Target</span>
+                        <span class="legend-chip"><span class="chip-color chip-completed"></span> Serviced</span>
+                    </div>
+                </div>
+                <div id="requestChipsContainer" class="chips-container">
+                    <!-- Injected dynamically -->
+                </div>
+            </div>
+
+            <!-- Visualization Stage Card -->
+            <div class="app-card visualizer-main-card">
+                <div class="viz-header">
+                    <div class="viz-status-group">
+                        <div class="status-badge-wrap">
+                            <span id="statusIndicator" class="status-dot idle"></span>
+                            <span id="statusText" class="status-label">Ready to Simulate</span>
+                        </div>
+                        <span id="activeAlgoBadge" class="algo-name-pill">Algorithm: SSTF</span>
+                    </div>
+
+                    <!-- View Switcher -->
+                    <div class="view-switch-tabs">
+                        <button type="button" class="view-tab-btn active" data-view="both">Dual View</button>
+                        <button type="button" class="view-tab-btn" data-view="ruler">Platter Track Bar</button>
+                        <button type="button" class="view-tab-btn" data-view="graph">Seek Trajectory Graph</button>
+                    </div>
+
+                    <button type="button" id="fullscreenBtn" class="btn btn-outline btn-sm" title="Fullscreen Visualizer">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path>
+                        </svg>
+                        <span>Fullscreen</span>
+                    </button>
+                </div>
+
+                <!-- Canvas Visualizers Container -->
+                <div class="canvases-wrapper">
+                    <!-- Ruler View -->
+                    <div id="rulerStageWrap" class="canvas-panel">
+                        <div class="canvas-panel-header">
+                            <div class="panel-header-title">
+                                <strong>Physical Platter Cylinder Tracks & Read/Write Arm Position</strong>
+                            </div>
+                            <span id="rulerRangeLabel" class="track-range-badge">Tracks: 0 ─── 199</span>
+                        </div>
+                        <div class="canvas-box">
+                            <canvas id="rulerCanvas" height="140"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- 2D Trajectory View -->
+                    <div id="graphStageWrap" class="canvas-panel">
+                        <div class="canvas-panel-header">
+                            <div class="panel-header-title">
+                                <strong>Seek-Sequence Trajectory (X: Cylinder Track Number • Y: Service Sequence)</strong>
+                            </div>
+                            <span class="trajectory-badge">Textbook Trajectory Graph</span>
+                        </div>
+                        <div class="canvas-box">
+                            <canvas id="graphCanvas" height="380"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Playback Toolbar -->
+                <div class="playback-bar">
+                    <div class="playback-btn-group">
+                        <button type="button" id="prevStepBtn" class="control-btn" title="Previous Step (Arrow Left)">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                                <polygon points="19 20 9 12 19 4 19 20"></polygon>
+                                <line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="3"></line>
+                            </svg>
+                            <span>Prev</span>
+                        </button>
+
+                        <button type="button" id="playPauseBtn" class="control-btn play-btn" title="Play / Pause (Spacebar)">
+                            <svg id="playIcon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                            </svg>
+                            <svg id="pauseIcon" class="hidden" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                                <rect x="6" y="4" width="4" height="16"></rect>
+                                <rect x="14" y="4" width="4" height="16"></rect>
+                            </svg>
+                            <span id="playPauseLabel">Play</span>
+                        </button>
+
+                        <button type="button" id="nextStepBtn" class="control-btn" title="Next Step (Arrow Right)">
+                            <span>Next</span>
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+                                <polygon points="5 4 15 12 5 20 5 4"></polygon>
+                                <line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="3"></line>
+                            </svg>
+                        </button>
+
+                        <button type="button" id="restartBtn" class="control-btn" title="Restart Animation (R)">
+                            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2">
+                                <path d="M1 4v6h6"></path>
+                                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+                            </svg>
+                            <span>Restart</span>
+                        </button>
+                    </div>
+
+                    <!-- Progress Indicator -->
+                    <div class="progress-container">
+                        <div class="progress-text-row">
+                            <span id="stepProgressLabel" class="progress-step-text">Step 0 of 8</span>
+                            <span id="progressPercent" class="progress-percent-text">0% Completed</span>
+                        </div>
+                        <div class="progress-bar-bg">
+                            <div id="progressBarFill" class="progress-bar-active" style="width: 0%;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Speed Control -->
+                    <div class="speed-control">
+                        <span class="speed-caption">Speed: <strong id="speedValueLabel">1.0x</strong></span>
+                        <div class="speed-slider-wrap">
+                            <span class="speed-mark">0.25x</span>
+                            <input type="range" id="speedSlider" min="0.25" max="3" step="0.25" value="1">
+                            <span class="speed-mark">3x</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Telemetry HUD Grid -->
+                <div class="telemetry-grid">
+                    <div class="telemetry-card card-cyan">
+                        <div class="telemetry-label">Current Head</div>
+                        <div id="hudCurrentHead" class="telemetry-value">53</div>
+                        <div class="telemetry-sub">Active cylinder</div>
+                    </div>
+
+                    <div class="telemetry-card card-violet">
+                        <div class="telemetry-label">Next Target Request</div>
+                        <div id="hudNextRequest" class="telemetry-value">65</div>
+                        <div id="hudPrevHeadSub" class="telemetry-sub">Moving from: 53</div>
+                    </div>
+
+                    <div class="telemetry-card card-amber">
+                        <div class="telemetry-label">Current Seek Movement</div>
+                        <div id="hudCurrentMovement" class="telemetry-value">0 tracks</div>
+                        <div id="hudMovementFormula" class="telemetry-sub">|53 - 53| = 0</div>
+                    </div>
+
+                    <div class="telemetry-card card-emerald">
+                        <div class="telemetry-label">Total Head Movement</div>
+                        <div id="hudTotalMovement" class="telemetry-value">0 tracks</div>
+                        <div id="hudAvgMovement" class="telemetry-sub">Avg: 0.0 tracks/req</div>
+                    </div>
+
+                    <div class="telemetry-card card-rose">
+                        <div class="telemetry-label">Requests Serviced</div>
+                        <div id="hudServedRatio" class="telemetry-value">0 / 8</div>
+                        <div id="hudRemainingSub" class="telemetry-sub">8 Remaining</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step Explanation Log -->
+            <div class="app-card explanation-card">
+                <div class="explanation-card-header">
+                    <div class="explanation-header-title">
+                        <span class="explanation-icon">🎓</span>
+                        <h3>Step-by-Step Execution Log</h3>
+                        <span id="eduModeBadge" class="pill-badge pill-accent">Educational Reasoning Active</span>
+                    </div>
+                    <button type="button" id="copyLogBtn" class="btn btn-outline btn-sm">
+                        📋 Copy Step Log
+                    </button>
+                </div>
+                <div id="stepExplanationContent" class="step-log-scroll">
+                    <!-- Dynamic step entries -->
+                </div>
+            </div>
+
+            <!-- Final Results Card -->
+            <div id="resultsCard" class="app-card results-card hidden">
+                <div class="results-header-row">
+                    <div>
+                        <span class="success-pill">✓ Simulation Completed Successfully</span>
+                        <h3 class="results-title" id="resultsAlgoTitle">SSTF Simulation Summary</h3>
+                    </div>
+                    <div class="results-btn-group">
+                        <button type="button" id="copyResultsBtn" class="btn btn-secondary">📋 Copy Summary</button>
+                        <button type="button" id="exportCsvBtn" class="btn btn-outline">📥 Export CSV</button>
+                    </div>
+                </div>
+
+                <div class="results-summary-grid">
+                    <div class="result-metric-card">
+                        <span class="result-metric-label">Initial Head Track</span>
+                        <span id="resInitialHead" class="result-metric-val">53</span>
+                    </div>
+                    <div class="result-metric-card highlight-metric">
+                        <span class="result-metric-label">Total Head Movement</span>
+                        <span id="resTotalMovement" class="result-metric-val">236 tracks</span>
+                    </div>
+                    <div class="result-metric-card">
+                        <span class="result-metric-label">Average Seek Distance</span>
+                        <span id="resAvgSeek" class="result-metric-val">29.5 tracks/req</span>
+                    </div>
+                    <div class="result-metric-card">
+                        <span class="result-metric-label">Requests Serviced</span>
+                        <span id="resServedCount" class="result-metric-val">8 / 8</span>
+                    </div>
+                </div>
+
+                <div class="sequence-chain-box">
+                    <span class="sequence-chain-title">Complete Head Trajectory Path:</span>
+                    <div id="resSequenceChain" class="sequence-chain-display">
+                        <!-- 53 -> 65 -> 67 ... -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Compare All Algorithms Section -->
+        <section id="comparison" class="comparison-section container">
+            <div class="section-heading-block">
+                <span class="category-tag">Comparative Benchmark</span>
+                <h2 class="section-heading">⚡ Compare All 6 Algorithms</h2>
+                <p class="section-subtext">
+                    Side-by-side benchmark across all six scheduling algorithms under identical initial parameters.
+                </p>
+            </div>
+
+            <!-- Comparison Table Card -->
+            <div class="app-card comparison-table-card">
+                <div class="table-card-header">
+                    <h3 class="card-title">Performance Benchmark Table</h3>
+                    <span class="pill-badge pill-success">Lowest movement marked in green</span>
+                </div>
+                <div class="table-scroll-wrap">
+                    <table class="benchmark-table" id="comparisonTable">
+                        <thead>
+                            <tr>
+                                <th>Algorithm</th>
+                                <th>Category</th>
+                                <th>Service Sequence Order</th>
+                                <th>Total Movement</th>
+                                <th>Avg Seek Distance</th>
+                                <th>Requests Served</th>
+                                <th>Starvation Risk</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="comparisonTableBody">
+                            <!-- Injected dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Analytics Grid: Chart + Winner Card -->
+            <div class="analytics-split-grid">
+                <!-- Chart Card -->
+                <div class="app-card chart-card">
+                    <div class="chart-card-header">
+                        <h3 class="card-title">Total Head Movement Comparison</h3>
+                        <span class="chart-unit-hint">(Tracks seeked — Lower is better)</span>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="comparisonChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Winner & Analysis Card -->
+                <div class="app-card winner-analysis-card">
+                    <div class="winner-header">
+                        <span class="trophy-emoji">🏆</span>
+                        <div>
+                            <span class="winner-kicker">Optimal for this Queue</span>
+                            <h3 id="winnerText" class="winner-headline">SSTF Produced Lowest Movement</h3>
+                        </div>
+                    </div>
+
+                    <div class="winner-metric-callout">
+                        <span class="metric-number" id="winnerMovementVal">236 tracks</span>
+                        <span class="metric-caption">Minimum Total Seek Distance</span>
+                    </div>
+
+                    <div id="winnerExplanation" class="winner-text-body">
+                        <!-- Dynamic explanation -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Learn the Algorithms Section -->
+        <section id="learn" class="theory-section container">
+            <div class="section-heading-block">
+                <span class="category-tag">Theoretical Foundations</span>
+                <h2 class="section-heading">📚 Learn the Disk Scheduling Algorithms</h2>
+                <p class="section-subtext">
+                    Comprehensive operational mechanics, architectural trade-offs, starvation vulnerabilities, and pseudocode implementations.
+                </p>
+            </div>
+
+            <div class="theory-grid">
+                <!-- FCFS -->
+                <div class="theory-card">
+                    <div class="theory-card-top">
+                        <span class="theory-code">FCFS</span>
+                        <span class="status-tag">First-In First-Out</span>
+                    </div>
+                    <h3 class="theory-title">First-Come First-Serve</h3>
+                    <p class="theory-summary">Requests are serviced strictly in arrival order. Completely fair and simple, but suffers from severe head oscillation across distant tracks (the wild arm swing problem).</p>
+                    <div class="tradeoffs-box">
+                        <div class="pro-line"><strong>Pros:</strong> Zero starvation, fair, minimal CPU scheduling overhead.</div>
+                        <div class="con-line"><strong>Cons:</strong> Unoptimized seek distance; high average waiting time.</div>
+                    </div>
+                    <div class="theory-meta">
+                        <span><strong>Time Complexity:</strong> O(N)</span>
+                        <span><strong>Starvation:</strong> None</span>
+                    </div>
+                    <details class="code-details">
+                        <summary>View Pseudocode</summary>
+                        <pre><code>function FCFS(requests, head):
+    for req in requests:
+        seek_to(req)
+        head = req</code></pre>
+                    </details>
+                </div>
+
+                <!-- SSTF -->
+                <div class="theory-card">
+                    <div class="theory-card-top">
+                        <span class="theory-code">SSTF</span>
+                        <span class="status-tag tag-primary">Greedy Selection</span>
+                    </div>
+                    <h3 class="theory-title">Shortest Seek Time First</h3>
+                    <p class="theory-summary">Selects the pending request closest to current head position. Minimizes immediate seek movement, but can cause distant cylinders to starve indefinitely under continuous arrivals.</p>
+                    <div class="tradeoffs-box">
+                        <div class="pro-line"><strong>Pros:</strong> Substantially reduces average seek time and increases throughput.</div>
+                        <div class="con-line"><strong>Cons:</strong> High starvation risk; directional oscillation; queue scanning cost.</div>
+                    </div>
+                    <div class="theory-meta">
+                        <span><strong>Time Complexity:</strong> O(N²) greedy</span>
+                        <span><strong>Starvation:</strong> High</span>
+                    </div>
+                    <details class="code-details">
+                        <summary>View Pseudocode</summary>
+                        <pre><code>function SSTF(requests, head):
+    while requests remain:
+        nearest = min(requests, key=distance_from(head))
+        seek_to(nearest)
+        remove nearest from requests
+        head = nearest</code></pre>
+                    </details>
+                </div>
+
+                <!-- SCAN -->
+                <div class="theory-card">
+                    <div class="theory-card-top">
+                        <span class="theory-code">SCAN</span>
+                        <span class="status-tag">Elevator Sweep</span>
+                    </div>
+                    <h3 class="theory-title">SCAN (Elevator Algorithm)</h3>
+                    <p class="theory-summary">Disk arm sweeps continuously in one direction servicing requests until it hits the physical disk boundary (0 or Max-1), then reverses direction and sweeps back.</p>
+                    <div class="tradeoffs-box">
+                        <div class="pro-line"><strong>Pros:</strong> Predictable bounds, no starvation, smooth arm movement.</div>
+                        <div class="con-line"><strong>Cons:</strong> Travels all the way to disk boundaries even when no requests exist there.</div>
+                    </div>
+                    <div class="theory-meta">
+                        <span><strong>Time Complexity:</strong> O(N log N)</span>
+                        <span><strong>Starvation:</strong> None</span>
+                    </div>
+                    <details class="code-details">
+                        <summary>View Pseudocode</summary>
+                        <pre><code>function SCAN(requests, head, direction, disk_size):
+    sweep in direction servicing requests
+    advance to physical disk boundary (0 or Max-1)
+    reverse direction and sweep back servicing remainder</code></pre>
+                    </details>
+                </div>
+
+                <!-- C-SCAN -->
+                <div class="theory-card">
+                    <div class="theory-card-top">
+                        <span class="theory-code">C-SCAN</span>
+                        <span class="status-tag">Circular Sweep</span>
+                    </div>
+                    <h3 class="theory-title">Circular SCAN</h3>
+                    <p class="theory-summary">Sweeps in a single direction to the disk boundary, then performs an immediate circular reset jump to the opposite boundary without servicing requests on the return journey.</p>
+                    <div class="tradeoffs-box">
+                        <div class="pro-line"><strong>Pros:</strong> Uniform waiting time distribution; treats cylinders as circular ring.</div>
+                        <div class="con-line"><strong>Cons:</strong> Circular jump overhead; boundary travel even when unnecessary.</div>
+                    </div>
+                    <div class="theory-meta">
+                        <span><strong>Time Complexity:</strong> O(N log N)</span>
+                        <span><strong>Starvation:</strong> None</span>
+                    </div>
+                    <details class="code-details">
+                        <summary>View Pseudocode</summary>
+                        <pre><code>function CSCAN(requests, head, direction, disk_size):
+    sweep in direction to boundary
+    jump to opposite boundary without servicing
+    resume sweep in original direction</code></pre>
+                    </details>
+                </div>
+
+                <!-- LOOK -->
+                <div class="theory-card">
+                    <div class="theory-card-top">
+                        <span class="theory-code">LOOK</span>
+                        <span class="status-tag">Adaptive Reversal</span>
+                    </div>
+                    <h3 class="theory-title">LOOK Algorithm</h3>
+                    <p class="theory-summary">An optimized elevator algorithm. The head looks ahead in the current direction. When no further requests remain ahead, it reverses immediately without traveling to the disk boundaries.</p>
+                    <div class="tradeoffs-box">
+                        <div class="pro-line"><strong>Pros:</strong> Eliminates wasted travel to boundaries; lower total seek than SCAN.</div>
+                        <div class="con-line"><strong>Cons:</strong> Waiting time varies by arm position; requires look-ahead check.</div>
+                    </div>
+                    <div class="theory-meta">
+                        <span><strong>Time Complexity:</strong> O(N log N)</span>
+                        <span><strong>Starvation:</strong> None</span>
+                    </div>
+                    <details class="code-details">
+                        <summary>View Pseudocode</summary>
+                        <pre><code>function LOOK(requests, head, direction):
+    sweep in direction until last pending request
+    reverse direction immediately
+    sweep opposite direction until final request</code></pre>
+                    </details>
+                </div>
+
+                <!-- C-LOOK -->
+                <div class="theory-card">
+                    <div class="theory-card-top">
+                        <span class="theory-code">C-LOOK</span>
+                        <span class="status-tag">Circular Adaptive</span>
+                    </div>
+                    <h3 class="theory-title">Circular LOOK</h3>
+                    <p class="theory-summary">Circular variant of LOOK. Sweeps in one direction until the last request in that direction, then jumps directly to the furthest request on the opposite side without touching boundaries.</p>
+                    <div class="tradeoffs-box">
+                        <div class="pro-line"><strong>Pros:</strong> Combines uniform waiting time of C-SCAN with boundary avoidance of LOOK.</div>
+                        <div class="con-line"><strong>Cons:</strong> Jump overhead; slight directional bias.</div>
+                    </div>
+                    <div class="theory-meta">
+                        <span><strong>Time Complexity:</strong> O(N log N)</span>
+                        <span><strong>Starvation:</strong> None</span>
+                    </div>
+                    <details class="code-details">
+                        <summary>View Pseudocode</summary>
+                        <pre><code>function CLOOK(requests, head, direction):
+    sweep in direction until last request in direction
+    jump directly to furthest opposite request
+    resume sweep in original direction</code></pre>
+                    </details>
+                </div>
+            </div>
+        </section>
+
+        <!-- HDD Architecture Section -->
+        <section id="about" class="about-section container">
+            <div class="app-card about-card">
+                <div class="about-layout">
+                    <div class="about-text-column">
+                        <span class="category-tag">Storage Architecture</span>
+                        <h2 class="about-heading">Mechanical HDD Seek Time vs Modern Solid State Drives</h2>
+                        <p class="about-p">
+                            Traditional Hard Disk Drives (HDDs) store data magnetically across spinning platters. Accessing any data sector requires three sequential physical steps:
+                        </p>
+                        <div class="latency-breakdown-list">
+                            <div class="latency-item">
+                                <strong>1. Seek Time (3–15 ms):</strong> The physical arm moves to align with the destination cylinder track. <em>Disk scheduling algorithms directly optimize this mechanical phase.</em>
+                            </div>
+                            <div class="latency-item">
+                                <strong>2. Rotational Latency (2–8 ms):</strong> Waiting for the magnetic platter to rotate the targeted sector under the head.
+                            </div>
+                            <div class="latency-item">
+                                <strong>3. Transfer Time (&lt;1 ms):</strong> Electrical transfer of bytes from platter surface to disk controller cache.
+                            </div>
+                        </div>
+                        <div class="note-box">
+                            <strong>Why is this taught today if we use SSDs?</strong>
+                            <p>Solid State Drives (SSDs) and NVMe storage use electronic flash memory with zero moving parts, making mechanical seek time irrelevant. However, understanding disk scheduling teaches foundational Operating Systems concepts: <strong>queue reordering, starvation vs fairness trade-offs, and batch optimization</strong>. Modern OS kernels (like Linux BFQ and Kyber) adapt these very principles to optimize block I/O bandwidth, write wear-leveling, and multi-threaded QoS.</p>
+                        </div>
+                    </div>
+
+                    <div class="hdd-schematic-column">
+                        <div class="hdd-frame">
+                            <div class="hdd-platter-disc">
+                                <div class="disc-track track-1"></div>
+                                <div class="disc-track track-2"></div>
+                                <div class="disc-track track-3"></div>
+                                <div class="disc-spindle"></div>
+                            </div>
+                            <div class="hdd-arm-mechanism">
+                                <div class="arm-pivot"></div>
+                                <div class="arm-bar"></div>
+                                <div class="arm-head-sensor"></div>
+                            </div>
+                        </div>
+                        <span class="hdd-caption">Spinning Platter & Actuator Arm Assembly</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Project Academic Footer -->
+    <footer class="site-footer">
+        <div class="container footer-content">
+            <div class="footer-grid">
+                <div class="footer-left">
+                    <div class="footer-brand-title">
+                        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                        <span>Disk Scheduling Simulator</span>
+                    </div>
+                    <p class="footer-desc">
+                        Interactive Operating Systems educational project demonstrating secondary storage head scheduling algorithms.
+                    </p>
+                    <div class="shortcuts-legend">
+                        <strong>Keyboard Shortcuts:</strong> 
+                        <kbd>Space</kbd> Play/Pause • 
+                        <kbd>→</kbd> Next Step • 
+                        <kbd>←</kbd> Prev Step • 
+                        <kbd>R</kbd> Restart
+                    </div>
+                </div>
+
+                <div class="footer-right">
+                    <div class="academic-details-box">
+                        <div class="academic-box-title">Coursework Project Submission</div>
+                        <div class="detail-line">
+                            <span class="detail-k">Course:</span>
+                            <span class="detail-v">Operating Systems / FOSD</span>
+                        </div>
+                        <div class="detail-line">
+                            <span class="detail-k">Topic:</span>
+                            <span class="detail-v">Disk Scheduling Algorithms Simulator</span>
+                        </div>
+                        <div class="detail-line">
+                            <span class="detail-k">Student Name:</span>
+                            <span class="detail-v editable" contenteditable="true" title="Click to edit student name">Harshit</span>
+                        </div>
+                        <div class="detail-line">
+                            <span class="detail-k">Enrollment ID:</span>
+                            <span class="detail-v editable" contenteditable="true" title="Click to edit enrollment ID">OSD-2026-FOSD</span>
+                        </div>
+                        <div class="detail-line">
+                            <span class="detail-k">Academic Year:</span>
+                            <span class="detail-v editable" contenteditable="true" title="Click to edit academic year">2026–2027</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-bottom-line">
+                <span>Designed for academic presentation, course evaluations, and classroom demonstrations.</span>
+                <span>Vanilla HTML5 • CSS3 • JavaScript • Canvas API • Chart.js</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container" aria-live="polite"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
