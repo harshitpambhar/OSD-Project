@@ -174,11 +174,17 @@ This project was built for the **Operating Systems (OS) / Fundamentals of Operat
 
 ---
 
-## 👤 Author Information
+## 👥 Team Members & Contributors
 
-- **Student Name**: Harshit
+| Enrollment ID | Student Name | Role |
+| :---: | :--- | :--- |
+| **24DCS060** | Harshit Pambhar | Full-Stack Development & UI/UX |
+| **24DCS004** | Rudra Bhavsar | Algorithms & Math Verification |
+| **24DCS010** | Dwarkesh Chotaliya | Performance Benchmarking & Visuals |
+| **24DCS013** | Kavy Dave | Educational Theory & Testing |
+
 - **Course**: Operating Systems / FOSD
 - **Project Title**: Interactive Disk Scheduling Simulator
-- **Academic Year**: 2026–2027
+- **Academic Year**: 2024–2025 (5th Semester)
 #   O S D - P r o j e c t  
  
